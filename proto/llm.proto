@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package llm; 
+
+option go_package = "gRPC-Playground/proto;proto";
+
+service LLMService {
+    rpc Chat(ChatRequest) returns (ChatResponse);
+}
+
+message ChatRequest {
+    string model = 1;
+    string prompt = 2;
+}
+
+message ChatResponse {
+    string content = 1;
+}
