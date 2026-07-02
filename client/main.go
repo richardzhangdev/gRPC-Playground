@@ -27,7 +27,7 @@ func main() {
 
 	// Create the request.
 	req := &pb.ChatRequest{
-		Model:  "gpt-4.1",
+		Model:  "glm",
 		Prompt: "explain protobufs",
 	}
 
