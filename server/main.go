@@ -17,7 +17,7 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 
-	pb.RegisterGreeterServer(grpcServer, &server{})
+	pb.RegisterLLMServiceServer(grpcServer, &server{})
 
 	log.Println("gRPC server listening on :50051")
 

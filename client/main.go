@@ -23,19 +23,20 @@ func main() {
 	defer conn.Close()
 
 	// Create a Greeter client.
-	client := pb.NewGreeterClient(conn)
+	client := pb.NewLLMServiceClient(conn)
 
 	// Create the request.
-	req := &pb.HelloRequest{
-		Name: "Richard",
+	req := &pb.ChatRequest{
+		Model:  "gpt-4.1",
+		Prompt: "explain protobufs",
 	}
 
 	// Call the remote SayHello function.
-	res, err := client.SayHello(context.Background(), req)
+	res, err := client.Chat(context.Background(), req)
 	if err != nil {
-		log.Fatalf("could not call SayHello: %v", err)
+		log.Fatalf("could not call Chat: %v", err)
 	}
 
 	// Print the response.
-	fmt.Println("Server replied:", res.Message)
+	fmt.Println("Server replied:", res.Content)
 }
