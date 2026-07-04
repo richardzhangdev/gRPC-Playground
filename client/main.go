@@ -12,7 +12,6 @@ import (
 )
 
 func main() {
-	// Connect to the gRPC server.
 	conn, err := grpc.NewClient(
 		"localhost:50051",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -22,21 +21,17 @@ func main() {
 	}
 	defer conn.Close()
 
-	// Create a Greeter client.
 	client := pb.NewLLMServiceClient(conn)
 
-	// Create the request.
 	req := &pb.ChatRequest{
 		Model:  "glm",
 		Prompt: "explain protobufs",
 	}
 
-	// Call the remote SayHello function.
 	res, err := client.Chat(context.Background(), req)
 	if err != nil {
 		log.Fatalf("could not call Chat: %v", err)
 	}
 
-	// Print the response.
-	fmt.Println("Server replied:", res.Content)
+	fmt.Println("Content:", res.Content)
 }
