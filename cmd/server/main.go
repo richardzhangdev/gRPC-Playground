@@ -7,6 +7,10 @@ import (
 	pb "gRPC-Playground/proto"
 
 	"google.golang.org/grpc"
+
+	"gRPC-Playground/consumer"
+	"gRPC-Playground/producer"
+	"gRPC-Playground/server"
 )
 
 func main() {
@@ -17,7 +21,15 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 
-	pb.RegisterLLMServiceServer(grpcServer, &server{})
+	brokers := []string{"localhost:9092"}
+	topic := "usage-events"
+
+	p := producer.NewProducer(brokers, topic)
+	go consumer.StartConsumer(brokers, topic, "usage-group")
+
+	s := server.NewServer(p)
+
+	pb.RegisterLLMServiceServer(grpcServer, s)
 
 	log.Println("gRPC server listening on :50051")
 

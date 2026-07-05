@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"bytes"
@@ -6,15 +6,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"time"
 
 	pb "gRPC-Playground/proto"
 	"net/http"
+
+	"gRPC-Playground/producer"
+	"gRPC-Playground/types"
 )
 
-type server struct {
+type Server struct {
 	pb.UnimplementedLLMServiceServer
+	producer *producer.Producer
 }
 
 type Message struct {
@@ -44,22 +47,13 @@ type Usage struct {
 	TotalTokens      int `json:"total_tokens"`
 }
 
-type UsageEvent struct {
-	RequestID        string
-	Model            string
-	PromptTokens     int
-	CompletionTokens int
-	TotalTokens      int
-	Latency          time.Duration
-}
-
-func (s *server) SayHello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloReply, error) {
+func (s *Server) SayHello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloReply, error) {
 	return &pb.HelloReply{
 		Message: "Hello " + req.Name,
 	}, nil
 }
 
-func (s *server) Chat(ctx context.Context, req *pb.ChatRequest) (*pb.ChatResponse, error) {
+func (s *Server) Chat(ctx context.Context, req *pb.ChatRequest) (*pb.ChatResponse, error) {
 	request := ChatCompletionRequest{
 		Model: req.Model,
 		Messages: []Message{
@@ -102,7 +96,7 @@ func (s *server) Chat(ctx context.Context, req *pb.ChatRequest) (*pb.ChatRespons
 		return nil, err
 	}
 
-	usageEvent := UsageEvent{
+	usageEvent := types.UsageEvent{
 		RequestID:        response.ID,
 		Model:            response.Model,
 		PromptTokens:     response.Usage.PromptTokens,
@@ -111,7 +105,10 @@ func (s *server) Chat(ctx context.Context, req *pb.ChatRequest) (*pb.ChatRespons
 		Latency:          latency,
 	}
 
-	s.RecordUsage(usageEvent)
+	err = s.producer.PublishUsage(usageEvent)
+	if err != nil {
+		return nil, err
+	}
 
 	return &pb.ChatResponse{
 		Content: response.Choices[0].Message.Content,
@@ -119,14 +116,8 @@ func (s *server) Chat(ctx context.Context, req *pb.ChatRequest) (*pb.ChatRespons
 
 }
 
-func (s *server) RecordUsage(usage UsageEvent) {
-	log.Printf(
-		"request_id=%s model=%s prompt_tokens=%d completion_tokens=%d total_tokens=%d latency=%s",
-		usage.RequestID,
-		usage.Model,
-		usage.PromptTokens,
-		usage.CompletionTokens,
-		usage.TotalTokens,
-		usage.Latency,
-	)
+func NewServer(p *producer.Producer) *Server {
+	return &Server{
+		producer: p,
+	}
 }
