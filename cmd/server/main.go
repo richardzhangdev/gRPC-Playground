@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	"gRPC-Playground/consumer"
+	"gRPC-Playground/metering"
 	"gRPC-Playground/producer"
 	"gRPC-Playground/server"
 )
@@ -25,7 +26,8 @@ func main() {
 	topic := "usage-events"
 
 	p := producer.NewProducer(brokers, topic)
-	go consumer.StartConsumer(brokers, topic, "usage-group")
+	om := metering.NewOpenMeterClient("http://localhost:8888", "")
+	go consumer.StartConsumer(brokers, topic, "usage-group", om)
 
 	s := server.NewServer(p)
 

@@ -24,7 +24,7 @@ func main() {
 	client := pb.NewLLMServiceClient(conn)
 
 	req := &pb.ChatRequest{
-		Model:  "glm",
+		Model:  "deepseek",
 		Prompt: "explain protobufs",
 	}
 

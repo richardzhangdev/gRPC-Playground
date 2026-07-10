@@ -1,0 +1,14 @@
+# Python virtualenv for local LiteLLM (now containerized via docker-compose)
+litellm/.venv/
+
+# Environment / secrets
+.env
+*.env
+
+# Go build artifacts
+/server/server
+/consumer/consumer
+/cmd/server/server
+
+# Editor / OS cruft
+.DS_Store

@@ -7,10 +7,11 @@ import (
 
 	"github.com/segmentio/kafka-go"
 
+	"gRPC-Playground/metering"
 	"gRPC-Playground/types"
 )
 
-func StartConsumer(brokers []string, topic string, groupID string) {
+func StartConsumer(brokers []string, topic string, groupID string, meterClient *metering.OpenMeterClient) {
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: brokers,
 		Topic:   topic,
@@ -20,9 +21,10 @@ func StartConsumer(brokers []string, topic string, groupID string) {
 	defer r.Close()
 
 	log.Println("Kafka consumer started")
+	ctx := context.Background()
 
 	for {
-		msg, err := r.ReadMessage(context.Background())
+		msg, err := r.ReadMessage(ctx)
 		if err != nil {
 			log.Printf("error reading message %v", err)
 			continue
@@ -35,7 +37,10 @@ func StartConsumer(brokers []string, topic string, groupID string) {
 			continue
 		}
 
-		RecordUsage(usage)
+		if err := meterClient.IngestEvent(ctx, &usage); err != nil {
+			log.Printf("openmeter ingest failed %v", err)
+		}
+		//RecordUsage(usage)
 	}
 }
 

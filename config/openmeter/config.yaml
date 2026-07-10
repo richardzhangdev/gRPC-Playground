@@ -1,0 +1,51 @@
+address: 0.0.0.0:8888
+
+# OpenMeter talks to Kafka over the in-network INTERNAL listener.
+ingest:
+  kafka:
+    broker: kafka:29092
+    brokerAddressFamily: v4
+    socketKeepAliveEnable: true
+    topicMetadataRefreshInterval: 10s
+
+# ClickHouse stores events and serves meter aggregations.
+aggregation:
+  clickhouse:
+    address: clickhouse:9000
+    username: default
+    password: openmeter
+    database: openmeter
+
+# The sink-worker drains Kafka into ClickHouse. Dedupe is disabled to avoid
+# needing Redis; enable it (driver: redis) if you want idempotent ingestion.
+sink:
+  minCommitCount: 1
+  namespaceRefetch: 1s
+  namespaceRefetchTimeout: 1s
+  kafka:
+    brokers: kafka:29092
+    brokerAddressFamily: v4
+    socketKeepAliveEnable: true
+    topicMetadataRefreshInterval: 10s
+  dedupe:
+    enabled: false
+
+postgres:
+  url: postgres://openmeter:openmeter@postgres:5432/openmeter?sslmode=disable
+  autoMigrate: migration
+
+meters:
+  - slug: llm_tokens_total
+    description: Total token usage for LLM requests
+    eventType: usage_event
+    valueProperty: "$.total_tokens"
+    aggregation: SUM
+    groupBy:
+      model: "$.model"
+
+  - slug: llm_requests_count
+    description: Number of LLM requests
+    eventType: usage_event
+    aggregation: COUNT
+    groupBy:
+      model: "$.model"
